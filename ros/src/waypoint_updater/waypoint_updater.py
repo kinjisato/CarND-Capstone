@@ -62,26 +62,30 @@ class WaypointUpdater(object):
                 self.publish_waypoints()
             rate.sleep()
 
-
+    # find the next waypoint in front of the car
     def get_closest_waypoint_idx(self):
-        x = self.pose.pose.position.x
-        y = self.pose.pose.position.y
-        closest_idx = self.waypoint_tree.query([x, y],1)[1]
+        x = self.pose.pose.position.x # current x position
+        y = self.pose.pose.position.y # current y position
+        closest_idx = self.waypoint_tree.query([x, y],1)[1] # id of nearest waypoint
 
         # check if closest is ahead or behind vehicle
-        closest_coord = self.waypoints_2d[closest_idx]
-        prev_coord = self.waypoints_2d[closest_idx - 1]
+        closest_coord = self.waypoints_2d[closest_idx] # coordinates of nearest waypoints
+        prev_coord = self.waypoints_2d[closest_idx - 1] # coordinates of the waypoint in front of the nearest waypoint
 
         # Equation for hyperplane through closest_coords
-        cl_vect = np.array(closest_coord)
-        prev_vect = np.array(prev_coord)
-        pos_vect = np.array([x,y])
+        cl_vect = np.array(closest_coord) # array of nearest waypoint
+        prev_vect = np.array(prev_coord) # array of the waypoint in front of the nearest waypoint
+        pos_vect = np.array([x,y]) # array of the current position
 
-        val = np.dot(cl_vect - prev_vect, pos_vect - cl_vect)
-
+        # get the dot product of the following 2 arrays/vectors
+        # 1. array from nearest waypoint to the waypoint in front of it
+        # 2. array from current position to next waypoint
+        val = np.dot(cl_vect - prev_vect, pos_vect - cl_vect) 
+	# if dot product is bigger than 0, the closest waypoint is behind the current position
+	# so the next waypoint will be used
         if val > 0:
             closest_idx = (closest_idx + 1) % len(self.waypoints_2d)
-
+	# returns the id of the closest waypoint in front of the car
         return closest_idx
 
 
@@ -89,20 +93,33 @@ class WaypointUpdater(object):
         #lane = Lane()
         #lane.header = self.base_waypoints.header
         #lane.waypoints = self.base_waypoints.waypoints[closest_idx:closest_idx+LOOKAHEAD_WPS]
-        final_lane = self.generate_lane()
+        
+	# use generare_lane() to generate a lane of the next waypoints
+	final_lane = self.generate_lane()
+	# publish the next waypoints to final_waypoints
         self.final_waypoints_pub.publish(final_lane)
 
     def generate_lane(self):
-        lane = Lane()
-
+        lane = Lane() # create a new lane
+	# find the id of the closest waypoint in front of the car with get_closest_waypoint()
         closest_idx = self.get_closest_waypoint_idx()
+	
+	# calculate the id of the farthest waypoint
         farthest_idx = closest_idx + LOOKAHEAD_WPS
         # base_waypoints = self.base_waypoints[closest_idx:farthest_idx]
-        base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
+        
+	# get the waypoints from closest to farthest
+	base_waypoints = self.base_lane.waypoints[closest_idx:farthest_idx]
 
+	# check if there is a stopline between closest to farthest waypoint
         if self.stopline_wp_idx == -1 or (self.stopline_wp_idx >= farthest_idx):
-            lane.waypoints = base_waypoints
+            # calculate the velocity
+	    for wp in base_waypoints:
+		wp.twist.twist.linear.x = 10.0
+	    # use the waypoints
+	    lane.waypoints = base_waypoints
         else:
+	    # decelerate to stop the car
             lane.waypoints = self.decelerate_waypoints(base_waypoints, closest_idx)
 
         return lane
