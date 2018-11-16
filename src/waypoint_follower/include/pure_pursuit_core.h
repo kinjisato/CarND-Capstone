@@ -145,4 +145,3 @@ public:
 }
 
 #endif  // PURE_PURSUIT_CORE_H
-
