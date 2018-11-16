@@ -17,7 +17,7 @@ current status in `/vehicle/traffic_lights` message. You can use this message to
 as well as to verify your TL classifier.
 '''
 
-LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
+LOOKAHEAD_WPS = 50 # Number of waypoints we will publish
 MAX_DECEL = 10.0 # max deceleration, was .5, acceleration should not exceed 10 m/s^2
 
 class WaypointUpdater(object):
