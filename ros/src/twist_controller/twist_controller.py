@@ -1,3 +1,8 @@
+#mlm 15.11.18 twist_controller.py: pid paramter modified; low pass parameters modified;
+#low pass for steering self.steer_lpf created; reset for low passes added
+
+
+
 from pid import PID
 from lowpass import LowPassFilter
 from yaw_controller import YawController
@@ -14,16 +19,21 @@ class Controller(object):
         # TODO: Implement
         self.yaw_controller = YawController(wheel_base, steer_ratio, 0.1, max_lat_accel, max_steer_angle)
 
-        kp = 0.3
+        kp = .3
         ki = 0.1
-        kd = 0.
+        kd = 0.1
         mn = 0. # minimum throttle value
         mx = 0.5 # maximum throttle value
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
 
-        tau = 0.5 # 1/(2pi*tau) = cutoff freq
-        ts = 0.5 # sample time 50Hz
+        # low pass for velocity
+        tau = 1./6.28/.1
+        ts = 1.
         self.vel_lpf = LowPassFilter(tau, ts)
+        # low pass for steering
+        tau = 1./6.28/.5
+        ts = 1.
+        self.steer_lpf = LowPassFilter(tau, ts)
 
         self.vehicle_mass = vehicle_mass
         self.fuel_capacity = fuel_capacity
@@ -41,6 +51,9 @@ class Controller(object):
         # Return throttle, brake, steer
         if not dbw_enabled:
             self.throttle_controller.reset()
+            #reset low pass filter
+            self.vel_lpf.reset()
+            self.steer_lpf.reset()
             return 0., 0., 0.
 
         current_vel = self.vel_lpf.filt(current_vel)
@@ -52,13 +65,18 @@ class Controller(object):
         # rospy.logwarn("Current velocity: {0}".format(current_vel))
         # rospy.logwarn("Filtered velocity: {0}".format(self.vel_lpf.get()))
 
-        steering = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
+        steering_raw = self.yaw_controller.get_steering(linear_vel, angular_vel, current_vel)
+        # additional steering filter
+        steering = self.steer_lpf.filt(steering_raw)
 
         vel_error = linear_vel - current_vel
         self.last_vel = current_vel
 
         current_time = rospy.get_time()
         sample_time = current_time - self.last_time
+
+#        rospy.loginfo("sample_time: {0}".format(sample_time))
+
         self.last_time = current_time
 
         throttle = self.throttle_controller.step(vel_error, sample_time)
@@ -76,3 +94,4 @@ class Controller(object):
         # return 1., 0., 0.
 
         return throttle, brake, steering
+
