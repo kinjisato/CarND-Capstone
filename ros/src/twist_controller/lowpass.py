@@ -1,3 +1,4 @@
+#mlm 15.11.18 lowpass.py: reset added
 
 class LowPassFilter(object):
     def __init__(self, tau, ts):
@@ -18,3 +19,8 @@ class LowPassFilter(object):
 
         self.last_val = val
         return val
+
+    def reset(self):
+        self.ready = False
+        self.last_val = 0.
+
