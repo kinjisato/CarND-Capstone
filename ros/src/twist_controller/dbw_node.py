@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+
+#mlm 15.11.18 dbw_node.py: rate set to 50 Hz
+
+
 import rospy
 from std_msgs.msg import Bool
 from dbw_mkz_msgs.msg import ThrottleCmd, SteeringCmd, BrakeCmd, SteeringReport
@@ -72,7 +76,7 @@ class DBWNode(object):
         rospy.Subscriber('/current_velocity', TwistStamped, self.velocity_cb)
 
         self.current_vel = None
-        self.curr_ang_vel = None
+#        self.current_ang_vel = None
         self.dbw_enabled = None
         self.linear_vel = None
         self.angular_vel = None
@@ -81,7 +85,7 @@ class DBWNode(object):
         self.loop()
 
     def loop(self):
-        rate = rospy.Rate(20) # 50Hz
+        rate = rospy.Rate(50) # 50Hz
         while not rospy.is_shutdown():
             # TODO: Get predicted throttle, brake, and steering using `twist_controller`
             # You should only publish the control commands if dbw is enabled
@@ -152,3 +156,4 @@ class DBWNode(object):
 
 if __name__ == '__main__':
     DBWNode()
+
