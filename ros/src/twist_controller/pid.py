@@ -1,3 +1,4 @@
+#mlm 15.11.18 pid.py: integral replaced by val, if controller is within boundaries
 
 MIN_NUM = float('-inf')
 MAX_NUM = float('inf')
@@ -28,7 +29,10 @@ class PID(object):
         elif val < self.min:
             val = self.min
         else:
-            self.int_val = integral
+#            self.int_val = integral
+            # val is pid control, integral just i
+            self.int_val = val
         self.last_error = error
 
         return val
+
