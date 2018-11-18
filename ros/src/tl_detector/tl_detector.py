@@ -10,6 +10,7 @@ from light_classification.tl_classifier import TLClassifier
 import tf
 import cv2
 import yaml
+from datetime import datetime
 
 from scipy.spatial import KDTree
 
@@ -133,18 +134,22 @@ class TLDetector(object):
             int: ID of traffic light color (specified in styx_msgs/TrafficLight)
 
         """
-        # For testing, just rerutn the light state
-        return light.state
-        '''
+
         if(not self.has_image):
             self.prev_light_loc = None
             return False
 
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
+        # To collect camera images
+        now_time_str = datetime.now().strftime("%y%m%d%H%M%S%f")
+        cv2.imwrite('camera_images/{0}.jpg'.format(now_time_str), cv_image)
+
         #Get classification
-        return self.light_classifier.get_classification(cv_image)
-        '''
+        #return self.light_classifier.get_classification(cv_image)
+
+        # For testing, just rerutn the light state
+        return light.state
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
