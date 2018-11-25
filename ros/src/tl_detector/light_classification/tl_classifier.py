@@ -71,6 +71,7 @@ class TLClassifier(object):
 
         #TODO implement light color prediction
         image224 = cv2.resize(image, (224, 224))
+        image224 = cv2.cvtColor(image224, cv2.COLOR_BGR2RGB)
         image224 = img_to_array(image224)
         # Convert the image into 4D Tensor (samples, height, width, channels) by adding an extra dimension to the axis 0.
         input_image = np.expand_dims(image224, axis=0)
