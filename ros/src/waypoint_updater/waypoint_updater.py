@@ -18,7 +18,7 @@ as well as to verify your TL classifier.
 '''
 
 LOOKAHEAD_WPS = 50 # Number of waypoints we will publish
-MAX_DECEL = 10.0 # max deceleration, was .5, acceleration should not exceed 10 m/s^2
+MAX_DECEL = 0.5 # max deceleration, acceleration should not exceed 10 m/s^2
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -27,7 +27,7 @@ class WaypointUpdater(object):
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb) # subscriber for /current_pose
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb) # subscriber for /base_waypoints
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb) # subscriber for /traffic_waypoint
-        rospy.Subscriber('/obstacle_waypoint', Int32, self.obstacle_cb) # subscriber for /obstacle_waypoint
+        #rospy.Subscriber('/obstacle_waypoint', Int32, self.obstacle_cb) # subscriber for /obstacle_waypoint
         
         # publisher for /final_waypoints
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
@@ -45,7 +45,7 @@ class WaypointUpdater(object):
 
     ### loop to get the target frequency
     def loop(self):
-        rate = rospy.Rate(50) # keep the rate of the loop by 50 Hz
+        rate = rospy.Rate(15) # keep the rate of the loop by 50 Hz
         while not rospy.is_shutdown():
             if self.pose and self.base_lane:
                 # Publish waypoints
