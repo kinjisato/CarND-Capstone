@@ -19,7 +19,7 @@ class TLClassifier(object):
         self.threshold = .8
         
         #Load the VGG16 model
-        vgg_model = vgg16.VGG16(weights='imagenet')
+        self.vgg_model = vgg16.VGG16(weights='imagenet')
         os.chdir('.')
         #model = load_model('light_classification/highway_modelv2a-ep15.h5')
 
@@ -45,7 +45,8 @@ class TLClassifier(object):
         model.add(Dense(10))
         model.add(Dense(3, activation='softmax'))
         model.load_weights('light_classification/highway_modelv2a-ep15-wts.h5')
-
+        
+        print('Traffic light claasifier initialized')
         
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
@@ -61,8 +62,10 @@ class TLClassifier(object):
         #TODO implement light color prediction
         image224 = cv2.resize(image, (224, 224))
         image224 = img_to_array(image224)
-        processed_image_vgg16 = vgg16.preprocess_input(image224.copy())
-        predictions_vgg16 = vgg_model.predict(processed_image_vgg16)
+        # Convert the image into 4D Tensor (samples, height, width, channels) by adding an extra dimension to the axis 0.
+        input_image = np.expand_dims(image224, axis=0)
+        processed_image_vgg16 = vgg16.preprocess_input(input_image.copy())
+        predictions_vgg16 = self.vgg_model.predict(processed_image_vgg16)
         label_vgg16 = decode_predictions(predictions_vgg16)
 
         if (int(label_vgg16[0][0][1] == 'traffic_light') & int(label_vgg16[0][0][2] > 0.7)):
@@ -81,3 +84,5 @@ class TLClassifier(object):
            
         return TrafficLight.UNKNOWN
 
+        
+        
