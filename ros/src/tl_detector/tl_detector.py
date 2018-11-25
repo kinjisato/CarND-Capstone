@@ -153,11 +153,11 @@ class TLDetector(object):
             rospy.logwarn('tl_classifier not initialized yet')
             return False
             
-        self.light_classifier.get_classification(cv_image)
-        #return self.light_classifier.get_classification(cv_image)
+        #self.light_classifier.get_classification(cv_image)
+        return self.light_classifier.get_classification(cv_image)
         # For testing, just rerutn the light state
         #print('Light State' ,light.state)
-        return light.state
+        #return light.state
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
