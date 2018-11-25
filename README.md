@@ -2,10 +2,9 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 
 ### Team WRTC (Work-Round-The-Clock)
 1. Edwin Ng (Team Leader)
-2. Ji Xiao Jie
-3. Kilian Muelken
-4. Kinji Sato
-5. Martin Muehlmeier
+2. Kilian Muelken
+3. Kinji Sato
+4. Martin Muehlmeier
 
 
 Please use **one** of the two installation options, either native **or** docker installation.
