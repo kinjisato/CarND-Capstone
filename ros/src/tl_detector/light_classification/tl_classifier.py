@@ -95,8 +95,6 @@ class TLClassifier(object):
             elif predict[0][2] > self.threshold:
                 print('Classifier Prediction - GREEN', predict[0][2])
                 return TrafficLight.GREEN
-           
-        return TrafficLight.UNKNOWN
-
-        
-        
+        else:
+            print('Classifier Prediction - UNKNOWN', label_vgg16[0][0])
+            return TrafficLight.UNKNOWN
