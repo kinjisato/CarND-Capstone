@@ -146,8 +146,9 @@ class TLDetector(object):
         #cv2.imwrite('camera_images/{0}.jpg'.format(now_time_str), cv_image)
 
         #Get classification
+        #self.light_classifier.get_classification(cv_image)
+        
         return self.light_classifier.get_classification(cv_image)
-
         # For testing, just rerutn the light state
         #return light.state
 
