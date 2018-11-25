@@ -18,16 +18,16 @@ class TLClassifier(object):
         #pass
         
         self.threshold = .8
-        
+
         #Load the VGG16 model
         # Save the graph after loading the model
         global vgg_model
         vgg_model = vgg16.VGG16(weights='imagenet')
         global graph_vgg
         graph_vgg = tf.get_default_graph()        
+        
 
         keep_prob = 0.1
-        
         global tl_model
         tl_model = Sequential()
         tl_model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(224, 224, 3)))
@@ -53,6 +53,8 @@ class TLClassifier(object):
         tl_model.load_weights('light_classification/highway_modelv2a-ep15-wts.h5')
         global graph_tl
         graph_tl = tf.get_default_graph()        
+        
+
         
         print('Traffic light claasifier initialized')
         
@@ -81,15 +83,17 @@ class TLClassifier(object):
             # make a prediction
             with graph_tl.as_default():
                 predict = tl_model.predict(np.expand_dims(image224, axis=0))
+                #predict = tl_model.predict(processed_image_vgg16)
             
+            #print('Traffic Light Prediction ', predict[0])
             if predict[0][0] > self.threshold:
-                print('RED')
+                print('Classifier Prediction - RED', predict[0][0])
                 return TrafficLight.RED
             elif predict[0][1] > self.threshold:
-                print('YELLOW')
+                print('Classifier Prediction - YELLOW', predict[0][1])
                 return TrafficLight.YELLOW
             elif predict[0][2] > self.threshold:
-                print('GREEN')
+                print('Classifier Prediction - GREEN', predict[0][2])
                 return TrafficLight.GREEN
            
         return TrafficLight.UNKNOWN

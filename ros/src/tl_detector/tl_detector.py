@@ -14,7 +14,7 @@ from datetime import datetime
 
 from scipy.spatial import KDTree
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 1
 
 class TLDetector(object):
     def __init__(self):
@@ -75,7 +75,7 @@ class TLDetector(object):
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
-        rospy.logdebug("Traffic light: {0}".format(self.lights))
+        #rospy.logdebug("Traffic light: {0}".format(self.lights))
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -149,14 +149,15 @@ class TLDetector(object):
         #cv2.imwrite('camera_images/{0}.jpg'.format(now_time_str), cv_image)
 
         #Get classification
-        #self.light_classifier.get_classification(cv_image)
         if self.light_classifier is None:
             rospy.logwarn('tl_classifier not initialized yet')
             return False
             
-        return self.light_classifier.get_classification(cv_image)
+        self.light_classifier.get_classification(cv_image)
+        #return self.light_classifier.get_classification(cv_image)
         # For testing, just rerutn the light state
-        #return light.state
+        #print('Light State' ,light.state)
+        return light.state
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
