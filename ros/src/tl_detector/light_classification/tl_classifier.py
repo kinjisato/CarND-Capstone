@@ -18,16 +18,16 @@ class TLClassifier(object):
         #pass
         
         self.threshold = .8
-        
+
         #Load the VGG16 model
         # Save the graph after loading the model
         global vgg_model
         vgg_model = vgg16.VGG16(weights='imagenet')
         global graph_vgg
         graph_vgg = tf.get_default_graph()        
+        
 
         keep_prob = 0.1
-        
         global tl_model
         tl_model = Sequential()
         tl_model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(224, 224, 3)))
@@ -54,6 +54,8 @@ class TLClassifier(object):
         global graph_tl
         graph_tl = tf.get_default_graph()        
         
+
+        
         print('Traffic light claasifier initialized')
         
     def get_classification(self, image):
@@ -69,6 +71,7 @@ class TLClassifier(object):
 
         #TODO implement light color prediction
         image224 = cv2.resize(image, (224, 224))
+        image224 = cv2.cvtColor(image224, cv2.COLOR_BGR2RGB)
         image224 = img_to_array(image224)
         # Convert the image into 4D Tensor (samples, height, width, channels) by adding an extra dimension to the axis 0.
         input_image = np.expand_dims(image224, axis=0)
@@ -81,18 +84,18 @@ class TLClassifier(object):
             # make a prediction
             with graph_tl.as_default():
                 predict = tl_model.predict(np.expand_dims(image224, axis=0))
+                #predict = tl_model.predict(processed_image_vgg16)
             
+            #print('Traffic Light Prediction ', predict[0])
             if predict[0][0] > self.threshold:
-                print('RED')
+                print('Classifier Prediction - RED', predict[0][0])
                 return TrafficLight.RED
             elif predict[0][1] > self.threshold:
-                print('YELLOW')
+                print('Classifier Prediction - YELLOW', predict[0][1])
                 return TrafficLight.YELLOW
             elif predict[0][2] > self.threshold:
-                print('GREEN')
+                print('Classifier Prediction - GREEN', predict[0][2])
                 return TrafficLight.GREEN
-           
-        return TrafficLight.UNKNOWN
-
-        
-        
+        else:
+            print('Classifier Prediction - UNKNOWN', label_vgg16[0][0])
+            return TrafficLight.UNKNOWN
