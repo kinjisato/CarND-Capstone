@@ -17,7 +17,7 @@ class TLClassifier(object):
         #TODO load classifier
         #pass
         
-        self.threshold = .8
+        self.threshold = .7
 
         #Load the VGG16 model
         # Save the graph after loading the model
@@ -27,7 +27,7 @@ class TLClassifier(object):
         graph_vgg = tf.get_default_graph()        
         
 
-        keep_prob = 0.1
+        keep_prob = 0.2
         global tl_model
         tl_model = Sequential()
         tl_model.add(Lambda(lambda x: x / 127.5 - 1.0, input_shape=(224, 224, 3)))
@@ -50,14 +50,17 @@ class TLClassifier(object):
         tl_model.add(Dense(3, activation='softmax'))
 
         os.chdir('.')
-        tl_model.load_weights('light_classification/highway_modelv2a-ep15-wts.h5')
+        tl_model.load_weights('light_classification/highway_modelv3-ep15-wts.h5')
         global graph_tl
         graph_tl = tf.get_default_graph()        
         
 
         
         print('Traffic light claasifier initialized')
-        
+    
+    import cv2
+
+
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
 
@@ -97,5 +100,5 @@ class TLClassifier(object):
                 print('Classifier Prediction - GREEN', predict[0][2])
                 return TrafficLight.GREEN
         else:
-            print('Classifier Prediction - UNKNOWN', label_vgg16[0][0])
+            #print('Classifier Prediction - UNKNOWN', label_vgg16[0][0])
             return TrafficLight.UNKNOWN
