@@ -1,3 +1,4 @@
+# 28 Nov 2018 (EN) - set tau=0.5 and ts=0.2
 #mlm 15.11.18 twist_controller.py: pid paramter modified; low pass parameters modified;
 #low pass for steering self.steer_lpf created; reset for low passes added
 
@@ -27,12 +28,14 @@ class Controller(object):
         self.throttle_controller = PID(kp, ki, kd, mn, mx)
 
         # low pass for velocity
-        tau = 1./6.28/.1
-        ts = 1.
+        #tau = 1./6.28/.1
+        #ts = 1.
+        tau = 0.5
+        ts = 0.2
         self.vel_lpf = LowPassFilter(tau, ts)
         # low pass for steering
-        tau = 1./6.28/.5
-        ts = 1.
+        #tau = 1./6.28/.5
+        #ts = 1.
         self.steer_lpf = LowPassFilter(tau, ts)
 
         self.vehicle_mass = vehicle_mass
