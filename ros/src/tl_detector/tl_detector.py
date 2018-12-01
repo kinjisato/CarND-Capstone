@@ -15,7 +15,7 @@ from datetime import datetime
 from scipy.spatial import KDTree
 
 STATE_COUNT_THRESHOLD = 1
-SKIP_IMAGES = 10
+SKIP_IMAGES = 5
 
 class TLDetector(object):
     def __init__(self):
@@ -91,8 +91,15 @@ class TLDetector(object):
 
         """
         self.image_count += 1
-        if (self.image_count % SKIP_IMAGES != 0):
-            return
+        
+        if (self.image_count == 1):
+            rospy.loginfo("Processing Camera Image %i", self.image_count)
+        else:
+            if (self.image_count % SKIP_IMAGES != 0):
+                return       
+            else:
+                rospy.loginfo("Processing Camera Image %i", self.image_count)
+
         
         self.has_image = True
         self.camera_image = msg
@@ -164,8 +171,7 @@ class TLDetector(object):
             
         #self.light_classifier.get_classification(cv_image)
         return self.light_classifier.get_classification(cv_image)
-        # For testing, just rerutn the light state
-        #print('Light State' ,light.state)
+        # For testing, just return the light state
         #return light.state
 
     def process_traffic_lights(self):
