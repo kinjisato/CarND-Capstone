@@ -92,15 +92,12 @@ class TLClassifier(object):
             
             #print('Traffic Light Prediction ', predict[0])
             if predict[0][0] > self.threshold:
-                #print('Classifier Prediction - RED', predict[0][0])
                 rospy.loginfo("   Classifier Prediction - RED %f", predict[0][0])
                 return TrafficLight.RED
             elif predict[0][1] > self.threshold:
-                #print('Classifier Prediction - YELLOW', predict[0][1])
                 rospy.loginfo("   Classifier Prediction - YELLOW %f", predict[0][1])
                 return TrafficLight.YELLOW
             elif predict[0][2] > self.threshold:
-                #print('Classifier Prediction - YELLOW', predict[0][1])
                 rospy.loginfo("   Classifier Prediction - GREEN %f", predict[0][2])
                 return TrafficLight.GREEN
         else:
