@@ -56,7 +56,11 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        
+        if (self.is_site):
+            sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
+        else:
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
@@ -161,8 +165,9 @@ class TLDetector(object):
         cv_image = self.bridge.imgmsg_to_cv2(self.camera_image, "bgr8")
 
         # To collect camera images
-        #now_time_str = datetime.now().strftime("%y%m%d%H%M%S%f")
+        now_time_str = datetime.now().strftime("%y%m%d%H%M%S%f")
         #cv2.imwrite('camera_images/'+str(light.state)+'/{0}.jpg'.format(now_time_str), cv_image)
+        cv2.imwrite('camera_images/'+'/{0}.jpg'.format(now_time_str), cv_image)
 
         #Get classification
         if self.light_classifier is None:
@@ -171,7 +176,8 @@ class TLDetector(object):
             
         #self.light_classifier.get_classification(cv_image)
         return self.light_classifier.get_classification(cv_image)
-        # For testing, just return the light state
+        # For testing, just rerutn the light state
+        #print('Light State' ,light.state)
         #return light.state
 
     def process_traffic_lights(self):
