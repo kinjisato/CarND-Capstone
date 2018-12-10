@@ -1,3 +1,5 @@
+//mlm 15.11.18 displacement_threshold and relative_angle_threshold_(5.) modified
+
 /*
  *  Copyright (c) 2015, Nagoya University
  *  All rights reserved.
@@ -98,8 +100,11 @@ public:
     , initial_velocity_(5.0)
     , lookahead_distance_calc_ratio_(2.0)
     , minimum_lookahead_distance_(6.0)
-    , displacement_threshold_(0.2)
-    , relative_angle_threshold_(5.)
+//    , displacement_threshold_(0.2)
+//    , relative_angle_threshold_(5.)
+    , displacement_threshold_(0.1)
+    , relative_angle_threshold_(2.5)
+
     , waypoint_set_(false)
     , pose_set_(false)
     , velocity_set_(false)
@@ -140,3 +145,4 @@ public:
 }
 
 #endif  // PURE_PURSUIT_CORE_H
+

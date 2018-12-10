@@ -14,17 +14,37 @@ from datetime import datetime
 
 from scipy.spatial import KDTree
 
-STATE_COUNT_THRESHOLD = 3
+STATE_COUNT_THRESHOLD = 1
+SKIP_IMAGES = 5
 
 class TLDetector(object):
     def __init__(self):
         rospy.init_node('tl_detector')
+        #rospy.init_node('tl_detector' , log_level=rospy.DEBUG)
 
         self.pose = None
         self.waypoints = None
         self.camera_image = None
+        self.waypoints_2d = None
+        self.waypoint_tree = None
+
         self.lights = []
 
+        config_string = rospy.get_param("/traffic_light_config")
+        self.config = yaml.load(config_string)
+        self.is_site = self.config['is_site']
+
+
+        self.bridge = CvBridge()
+        self.light_classifier = TLClassifier()
+        self.listener = tf.TransformListener()
+
+        self.state = TrafficLight.UNKNOWN
+        self.last_state = TrafficLight.UNKNOWN
+        self.last_wp = -1
+        self.state_count = 0
+        self.image_count = 0
+        
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
 
@@ -36,31 +56,23 @@ class TLDetector(object):
         rely on the position of the light and the camera image to predict it.
         '''
         sub3 = rospy.Subscriber('/vehicle/traffic_lights', TrafficLightArray, self.traffic_cb)
-        sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
+        
+        if (self.is_site):
+            sub6 = rospy.Subscriber('/image_raw', Image, self.image_cb)
+        else:
+            sub6 = rospy.Subscriber('/image_color', Image, self.image_cb)
 
-        config_string = rospy.get_param("/traffic_light_config")
-        self.config = yaml.load(config_string)
 
         self.upcoming_red_light_pub = rospy.Publisher('/traffic_waypoint', Int32, queue_size=1)
 
-        self.bridge = CvBridge()
-        self.light_classifier = TLClassifier()
-        self.listener = tf.TransformListener()
 
-        self.state = TrafficLight.UNKNOWN
-        self.last_state = TrafficLight.UNKNOWN
-        self.last_wp = -1
-        self.state_count = 0
-
-        self.waypoints_2d = None
-        self.waypoint_tree = None
-
+        rospy.loginfo('Traffic light detector initialized')
         rospy.spin()
 
 
     def pose_cb(self, msg):
         self.pose = msg
-        #rospy.logwarn("Pose: {0}".format(self.pose))
+        #rospy.logdebug("Pose: {0}".format(self.pose))
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints
@@ -72,7 +84,7 @@ class TLDetector(object):
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
-        #rospy.logwarn("Traffic light: {0}".format(self.lights))
+        #rospy.logdebug("Traffic light: {0}".format(self.lights))
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -82,11 +94,22 @@ class TLDetector(object):
             msg (Image): image from car-mounted camera
 
         """
+        self.image_count += 1
+        
+        if (self.image_count == 1):
+            rospy.loginfo("Processing Camera Image %i", self.image_count)
+        else:
+            if (self.image_count % SKIP_IMAGES != 0):
+                return       
+            else:
+                rospy.loginfo("Processing Camera Image %i", self.image_count)
+
+        
         self.has_image = True
         self.camera_image = msg
         light_wp, state = self.process_traffic_lights()
-        #rospy.logwarn("light_wp: {0}".format(light_wp))
-        #rospy.logwarn("state: {0}".format(state))
+        #rospy.logdebug("light_wp: {0}".format(light_wp))
+        #rospy.logdebug("state: {0}".format(state))
 
         '''
         Publish upcoming red lights at camera frequency.
@@ -102,10 +125,10 @@ class TLDetector(object):
             light_wp = light_wp if state == TrafficLight.RED else -1
             self.last_wp = light_wp
             self.upcoming_red_light_pub.publish(Int32(light_wp))
-            #rospy.logwarn("light_wp 1: {0}".format(self.last_wp))
+            #rospy.logdebug("light_wp 1: {0}".format(self.last_wp))
         else:
             self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-            #rospy.logwarn("light_wp 2: {0}".format(self.last_wp))
+            #rospy.logdebug("light_wp 2: {0}".format(self.last_wp))
         self.state_count += 1
 
     def get_closest_waypoint(self, x, y):
@@ -120,7 +143,7 @@ class TLDetector(object):
         """
         #TODO implement
         closest_idx = self.waypoint_tree.query([x,y],1)[1]
-        #rospy.logwarn("Closest idx: {0}".format(clsest_idx))
+        #rospy.logdebug("Closest idx: {0}".format(clsest_idx))
         return closest_idx
         #return 0
 
@@ -143,13 +166,19 @@ class TLDetector(object):
 
         # To collect camera images
         now_time_str = datetime.now().strftime("%y%m%d%H%M%S%f")
-        cv2.imwrite('camera_images/{0}.jpg'.format(now_time_str), cv_image)
+        #cv2.imwrite('camera_images/'+str(light.state)+'/{0}.jpg'.format(now_time_str), cv_image)
+        cv2.imwrite('camera_images/'+'/{0}.jpg'.format(now_time_str), cv_image)
 
         #Get classification
-        #return self.light_classifier.get_classification(cv_image)
-
+        if self.light_classifier is None:
+            rospy.logwarn('tl_classifier not initialized yet')
+            return False
+            
+        #self.light_classifier.get_classification(cv_image)
+        return self.light_classifier.get_classification(cv_image)
         # For testing, just rerutn the light state
-        return light.state
+        #print('Light State' ,light.state)
+        #return light.state
 
     def process_traffic_lights(self):
         """Finds closest visible traffic light, if one exists, and determines its
@@ -186,7 +215,6 @@ class TLDetector(object):
 
         if closest_light:
             state = self.get_light_state(closest_light)
-            rospy.logwarn("line_wp_idx: {0}".format(line_wp_idx))
             return line_wp_idx, state
         #self.waypoints = None
         return -1, TrafficLight.UNKNOWN
